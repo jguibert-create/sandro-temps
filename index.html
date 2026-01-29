@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Temps Sandro">
+    <meta name="theme-color" content="#3B82F6">
+    <title>Saisie Temps - Sandro</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #EFF6FF 0%, #E0E7FF 100%);
+            min-height: 100vh;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
+        }
+        
+        .app {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: calc(80px + var(--safe-bottom));
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header p {
+            color: var(--gray-500);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+        
+        .sync-status.synced {
+            background: #D1FAE5;
+            color: var(--success);
+        }
+        
+        .sync-status.syncing {
+            background: #FEF3C7;
+            color: var(--warning);
+        }
+        
+        .sync-status.error {
+            background: #FEE2E2;
+            color: var(--danger);
+        }
+        
+        .sync-status.offline {
+            background: var(--gray-200);
+            color: var(--gray-500);
+        }
+        
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .sync-status.syncing .sync-dot {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Date Navigation */
+        .date-nav {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .date-nav button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .date-nav button:active {
+            transform: scale(0.95);
+            background: var(--gray-200);
+        }
+        
+        .date-display {
+            text-align: center;
+        }
+        
+        .date-display .day {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+        
+        .date-display .weekday {
+            font-size: 16px;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .date-display .month {
+            font-size: 14px;
+            color: var(--gray-500);
+        }
+        
+        .today-btn {
+            display: block;
+            margin: 8px auto 0;
+            padding: 6px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Summary Card */
+        .summary {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .summary-header h3 {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+        
+        .summary-total {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .summary-total.complete { color: var(--success); }
+        .summary-total.partial { color: var(--warning); }
+        .summary-total.empty { color: var(--gray-300); }
+        
+        .affaire-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .affaire-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--gray-50);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        
+        .affaire-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .affaire-pill .hours {
+            font-weight: 700;
+        }
+        
+        /* Entries List */
+        .entries {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .entries-header h3 {
+            font-size: 16px;
+            color: var(--gray-800);
+            font-weight: 600;
+        }
+        
+        .entry-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+        
+        .entry-item.pending {
+            opacity: 0.7;
+            border: 2px dashed var(--warning);
+        }
+        
+        .entry-color {
+            width: 4px;
+            height: 50px;
+            border-radius: 4px;
+        }
+        
+        .entry-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .entry-affaire {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+        
+        .entry-desc {
+            font-size: 14px;
+            color: var(--gray-800);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .entry-duration {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+        
+        .entry-delete {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #FEE2E2;
+            color: var(--danger);
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        
+        .no-entries {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-400);
+        }
+        
+        /* Add Button */
+        .add-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .add-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* Bottom Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: calc(8px + var(--safe-bottom));
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--gray-400);
+            font-size: 10px;
+            gap: 4px;
+        }
+        
+        .tab-item.active {
+            color: var(--primary);
+        }
+        
+        .tab-item .icon {
+            font-size: 24px;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-end;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            padding-bottom: calc(24px + var(--safe-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--gray-300);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+        
+        .modal h2 {
+            font-size: 20px;
+            color: var(--gray-800);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            color: var(--gray-800);
+            -webkit-appearance: none;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        /* Duration Grid */
+        .duration-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .duration-btn {
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .duration-btn.selected {
+            border-color: var(--primary);
+            background: #EFF6FF;
+            color: var(--primary);
+        }
+        
+        .duration-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .modal-actions button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-cancel {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .btn-save {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Week View */
+        .week-view {
+            display: none;
+        }
+        
+        .week-view.active {
+            display: block;
+        }
+        
+        .week-day-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            cursor: pointer;
+        }
+        
+        .week-day-card.today {
+            border: 2px solid var(--primary);
+        }
+        
+        .week-day-info h4 {
+            font-size: 16px;
+            color: var(--gray-800);
+            text-transform: capitalize;
+        }
+        
+        .week-day-info p {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+        
+        .week-day-hours {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        /* Export View */
+        .export-view {
+            display: none;
+        }
+        
+        .export-view.active {
+            display: block;
+        }
+        
+        .export-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        
+        .export-card h3 {
+            font-size: 16px;
+            color: var(--gray-800);
+            margin-bottom: 12px;
+        }
+        
+        .export-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .export-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .export-btn.secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+        
+        .export-btn.success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: var(--gray-50);
+            border-radius: 12px;
+        }
+        
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+        
+        .stat-item .label {
+            font-size: 11px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+        
+        /* Config section */
+        .config-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-200);
+        }
+        
+        .config-section h4 {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+        }
+        
+        .config-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 12px;
+            font-family: monospace;
+            margin-bottom: 8px;
+        }
+        
+        .config-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .config-status {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+        
+        .config-status.success {
+            color: var(--success);
+        }
+        
+        .config-status.error {
+            color: var(--danger);
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--gray-800);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: var(--success);
+        }
+        
+        .toast.error {
+            background: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Day View -->
+        <div id="day-view" class="view active">
+            <div class="header">
+                <div class="header-row">
+                    <div>
+                        <h1>⏱️ Temps Sandro</h1>
+                        <p>Saisie rapide par affaire</p>
+                    </div>
+                    <div class="sync-status offline" id="sync-status">
+                        <span class="sync-dot"></span>
+                        <span id="sync-text">Hors ligne</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="date-nav">
+                <button onclick="changeDate(-1)">◀</button>
+                <div class="date-display">
+                    <div class="weekday" id="weekday">Lundi</div>
+                    <div class="day" id="day">27</div>
+                    <div class="month" id="month">Janvier 2026</div>
+                    <button class="today-btn" onclick="goToday()">Aujourd'hui</button>
+                </div>
+                <button onclick="changeDate(1)">▶</button>
+            </div>
+            
+            <div class="summary">
+                <div class="summary-header">
+                    <h3>Total du jour</h3>
+                    <div class="summary-total empty" id="day-total">0h</div>
+                </div>
+                <div class="affaire-pills" id="affaire-summary"></div>
+            </div>
+            
+            <div class="entries">
+                <div class="entries-header">
+                    <h3>📝 Entrées</h3>
+                </div>
+                <div id="entries-list">
+                    <div class="no-entries">Aucune entrée pour ce jour</div>
+                </div>
+            </div>
+            
+            <button class="add-btn" onclick="openModal()">
+                <span>➕</span> Ajouter une entrée
+            </button>
+        </div>
+        
+        <!-- Week View -->
+        <div id="week-view" class="week-view">
+            <div class="header">
+                <div class="header-row">
+                    <div>
+                        <h1>📅 Vue Semaine</h1>
+                        <p id="week-range">Semaine du 27/01 au 31/01</p>
+                    </div>
+                    <div class="sync-status offline" id="sync-status-week">
+                        <span class="sync-dot"></span>
+                        <span>Hors ligne</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <div class="summary-header">
+                    <h3>Total semaine</h3>
+                    <div class="summary-total" id="week-total">0h</div>
+                </div>
+                <div class="affaire-pills" id="week-affaire-summary"></div>
+            </div>
+            
+            <div id="week-days"></div>
+        </div>
+        
+        <!-- Export View -->
+        <div id="export-view" class="export-view">
+            <div class="header">
+                <h1>📊 Export & Config</h1>
+                <p>Synchronisation Google Sheets</p>
+            </div>
+            
+            <div class="export-card">
+                <h3>Statistiques du mois</h3>
+                <div class="stats-grid" id="month-stats">
+                    <div class="stat-item">
+                        <div class="value" id="stat-total">0h</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value" id="stat-days">0</div>
+                        <div class="label">Jours</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value" id="stat-avg">0h</div>
+                        <div class="label">Moyenne</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="export-card">
+                <h3>Synchronisation</h3>
+                <button class="export-btn success" onclick="syncNow()">
+                    🔄 Synchroniser maintenant
+                </button>
+                <button class="export-btn primary" onclick="exportCSV()">
+                    📥 Télécharger CSV
+                </button>
+                <button class="export-btn secondary" onclick="shareData()">
+                    📤 Partager récap
+                </button>
+                
+                <div class="config-section">
+                    <h4>🔗 URL Google Apps Script</h4>
+                    <input type="text" class="config-input" id="script-url" 
+                           placeholder="https://script.google.com/macros/s/...../exec"
+                           onchange="saveConfig()">
+                    <div class="config-status" id="config-status"></div>
+                    <button class="export-btn secondary" onclick="testConnection()" style="margin-top: 8px;">
+                        🧪 Tester la connexion
+                    </button>
+                </div>
+            </div>
+            
+            <div class="export-card">
+                <h3>Données locales</h3>
+                <button class="export-btn secondary" onclick="clearData()">
+                    🗑️ Effacer les données locales
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-item active" onclick="switchView('day')">
+            <span class="icon">📅</span>
+            Jour
+        </button>
+        <button class="tab-item" onclick="switchView('week')">
+            <span class="icon">📊</span>
+            Semaine
+        </button>
+        <button class="tab-item" onclick="switchView('export')">
+            <span class="icon">⚙️</span>
+            Config
+        </button>
+    </div>
+    
+    <!-- Add Entry Modal -->
+    <div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+        <div class="modal">
+            <div class="modal-handle"></div>
+            <h2>Nouvelle entrée</h2>
+            
+            <div class="form-group">
+                <label>Affaire</label>
+                <select id="input-affaire">
+                    <option value="">-- Sélectionner --</option>
+                    <option value="2023110021">0021 - GLOBAL SERVICES GÉNÉRAUX</option>
+                    <option value="2015070014">0014 - REFACTURATION POSTER</option>
+                    <option value="2015050127">0127 - REFACTURATION BRUNCH</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Durée</label>
+                <div class="duration-grid" id="duration-grid"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Description (optionnel)</label>
+                <input type="text" id="input-desc" placeholder="Ex: Réunion, maintenance...">
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+                <button class="btn-save" onclick="saveEntry()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        
+        const AFFAIRES = [
+            { code: '2023110021', label: 'SERVICES GÉNÉRAUX', color: '#3B82F6' },
+            { code: '2015070014', label: 'POSTER', color: '#10B981' },
+            { code: '2015050127', label: 'BRUNCH', color: '#F59E0B' }
+        ];
+        
+        const DURATIONS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8];
+        
+        // ==========================================
+        // STATE
+        // ==========================================
+        
+        let currentDate = new Date();
+        let entries = {};
+        let pendingSync = []; // Entrées en attente de sync
+        let selectedDuration = null;
+        let scriptUrl = 'https://script.google.com/macros/s/AKfycbx30tg4uV69eQgjVMMeVLXVDE7piAaJ1z5mzs7ADLKysSuUz3AK-gIQ5PT6Fin46yMa/exec';
+        
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            loadConfig();
+            renderDurationGrid();
+            updateUI();
+            updateSyncStatus();
+            
+            // Auto-sync au démarrage si connecté
+            if (scriptUrl && navigator.onLine) {
+                syncPending();
+            }
+        });
+        
+        // Écouter les changements de connexion
+        window.addEventListener('online', () => {
+            updateSyncStatus();
+            syncPending();
+        });
+        
+        window.addEventListener('offline', () => {
+            updateSyncStatus();
+        });
+        
+        // ==========================================
+        // STORAGE
+        // ==========================================
+        
+        function loadData() {
+            const saved = localStorage.getItem('sandro-temps');
+            if (saved) entries = JSON.parse(saved);
+            
+            const pending = localStorage.getItem('sandro-temps-pending');
+            if (pending) pendingSync = JSON.parse(pending);
+        }
+        
+        function saveData() {
+            localStorage.setItem('sandro-temps', JSON.stringify(entries));
+            localStorage.setItem('sandro-temps-pending', JSON.stringify(pendingSync));
+        }
+        
+        function loadConfig() {
+            const defaultUrl = 'https://script.google.com/macros/s/AKfycbx30tg4uV69eQgjVMMeVLXVDE7piAaJ1z5mzs7ADLKysSuUz3AK-gIQ5PT6Fin46yMa/exec';
+            scriptUrl = localStorage.getItem('sandro-script-url') || defaultUrl;
+            document.getElementById('script-url').value = scriptUrl;
+        }
+        
+        function saveConfig() {
+            scriptUrl = document.getElementById('script-url').value.trim();
+            localStorage.setItem('sandro-script-url', scriptUrl);
+            updateSyncStatus();
+            showToast('Configuration sauvegardée');
+        }
+        
+        // ==========================================
+        // SYNC WITH GOOGLE SHEETS
+        // ==========================================
+        
+        function updateSyncStatus() {
+            const statusEls = document.querySelectorAll('.sync-status');
+            const isOnline = navigator.onLine;
+            const hasUrl = !!scriptUrl;
+            const hasPending = pendingSync.length > 0;
+            
+            let status, text;
+            
+            if (!hasUrl) {
+                status = 'offline';
+                text = 'Non configuré';
+            } else if (!isOnline) {
+                status = 'offline';
+                text = 'Hors ligne';
+            } else if (hasPending) {
+                status = 'syncing';
+                text = `${pendingSync.length} en attente`;
+            } else {
+                status = 'synced';
+                text = 'Synchronisé';
+            }
+            
+            statusEls.forEach(el => {
+                el.className = 'sync-status ' + status;
+                const textEl = el.querySelector('span:last-child');
+                if (textEl) textEl.textContent = text;
+            });
+            
+            document.getElementById('sync-text').textContent = text;
+        }
+        
+        async function syncToSheet(entry) {
+            if (!scriptUrl) {
+                pendingSync.push(entry);
+                saveData();
+                updateSyncStatus();
+                return false;
+            }
+            
+            if (!navigator.onLine) {
+                pendingSync.push(entry);
+                saveData();
+                updateSyncStatus();
+                return false;
+            }
+            
+            try {
+                const affaire = AFFAIRES.find(a => a.code === entry.affaire);
+                const payload = {
+                    date: entry.date,
+                    affaireCode: entry.affaire,
+                    affaireLabel: affaire?.label || '',
+                    duration: entry.duration,
+                    description: entry.description || ''
+                };
+                
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Google Apps Script nécessite no-cors
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                // Avec no-cors, on ne peut pas lire la réponse
+                // On considère que c'est OK si pas d'erreur
+                updateSyncStatus();
+                return true;
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                pendingSync.push(entry);
+                saveData();
+                updateSyncStatus();
+                return false;
+            }
+        }
+        
+        async function syncPending() {
+            if (!scriptUrl || !navigator.onLine || pendingSync.length === 0) return;
+            
+            const toSync = [...pendingSync];
+            pendingSync = [];
+            
+            for (const entry of toSync) {
+                await syncToSheet(entry);
+            }
+            
+            saveData();
+            updateSyncStatus();
+        }
+        
+        async function syncNow() {
+            if (!scriptUrl) {
+                showToast('Configurez l\'URL du script d\'abord', 'error');
+                return;
+            }
+            
+            if (!navigator.onLine) {
+                showToast('Pas de connexion internet', 'error');
+                return;
+            }
+            
+            // Sync pending
+            await syncPending();
+            
+            showToast('Synchronisation terminée', 'success');
+        }
+        
+        async function testConnection() {
+            if (!scriptUrl) {
+                document.getElementById('config-status').textContent = '❌ Entrez une URL d\'abord';
+                document.getElementById('config-status').className = 'config-status error';
+                return;
+            }
+            
+            document.getElementById('config-status').textContent = '⏳ Test en cours...';
+            document.getElementById('config-status').className = 'config-status';
+            
+            try {
+                // Tester avec une requête GET
+                const response = await fetch(scriptUrl + '?test=1', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                document.getElementById('config-status').textContent = '✅ Connexion établie';
+                document.getElementById('config-status').className = 'config-status success';
+                showToast('Connexion réussie !', 'success');
+                
+            } catch (error) {
+                document.getElementById('config-status').textContent = '❌ Erreur: ' + error.message;
+                document.getElementById('config-status').className = 'config-status error';
+                showToast('Erreur de connexion', 'error');
+            }
+        }
+        
+        // ==========================================
+        // DATE HELPERS
+        // ==========================================
+        
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+        
+        function formatDate(date, format) {
+            const options = {
+                weekday: format === 'weekday' ? 'long' : undefined,
+                day: 'numeric',
+                month: format === 'full' ? 'long' : '2-digit',
+                year: format === 'full' ? 'numeric' : undefined
+            };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+        
+        function getWeekDates(date) {
+            const start = new Date(date);
+            const day = start.getDay();
+            const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+            start.setDate(diff);
+            
+            const dates = [];
+            for (let i = 0; i < 5; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                dates.push(d);
+            }
+            return dates;
+        }
+        
+        // ==========================================
+        // NAVIGATION
+        // ==========================================
+        
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            updateUI();
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+        
+        function goToday() {
+            currentDate = new Date();
+            updateUI();
+        }
+        
+        function switchView(view) {
+            document.querySelectorAll('.view, .week-view, .export-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(view + '-view').classList.add('active');
+            event.target.closest('.tab-item').classList.add('active');
+            
+            if (view === 'week') updateWeekView();
+            if (view === 'export') updateExportView();
+        }
+        
+        // ==========================================
+        // RENDER
+        // ==========================================
+        
+        function updateUI() {
+            // Date display
+            document.getElementById('weekday').textContent = formatDate(currentDate, 'weekday');
+            document.getElementById('day').textContent = currentDate.getDate();
+            document.getElementById('month').textContent = currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            
+            // Entries
+            const key = getDateKey(currentDate);
+            const dayEntries = entries[key] || [];
+            
+            renderEntries(dayEntries);
+            renderSummary(dayEntries);
+        }
+        
+        function renderEntries(dayEntries) {
+            const container = document.getElementById('entries-list');
+            
+            if (dayEntries.length === 0) {
+                container.innerHTML = '<div class="no-entries">Aucune entrée pour ce jour</div>';
+                return;
+            }
+            
+            container.innerHTML = dayEntries.map((entry, idx) => {
+                const affaire = AFFAIRES.find(a => a.code === entry.affaire) || {};
+                const isPending = pendingSync.some(p => p.id === entry.id);
+                return `
+                    <div class="entry-item ${isPending ? 'pending' : ''}">
+                        <div class="entry-color" style="background: ${affaire.color || '#CBD5E1'}"></div>
+                        <div class="entry-content">
+                            <div class="entry-affaire">${affaire.label || 'Non défini'} ${isPending ? '⏳' : ''}</div>
+                            <div class="entry-desc">${entry.description || 'Sans description'}</div>
+                        </div>
+                        <div class="entry-duration">${entry.duration}h</div>
+                        <button class="entry-delete" onclick="deleteEntry(${idx})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderSummary(dayEntries) {
+            const total = dayEntries.reduce((sum, e) => sum + (e.duration || 0), 0);
+            
+            const totalEl = document.getElementById('day-total');
+            totalEl.textContent = total + 'h';
+            totalEl.className = 'summary-total ' + (total >= 8 ? 'complete' : total > 0 ? 'partial' : 'empty');
+            
+            const pillsContainer = document.getElementById('affaire-summary');
+            const byAffaire = {};
+            dayEntries.forEach(e => {
+                byAffaire[e.affaire] = (byAffaire[e.affaire] || 0) + e.duration;
+            });
+            
+            pillsContainer.innerHTML = AFFAIRES
+                .filter(a => byAffaire[a.code])
+                .map(a => `
+                    <div class="affaire-pill">
+                        <div class="dot" style="background: ${a.color}"></div>
+                        <span>${a.label}</span>
+                        <span class="hours" style="color: ${a.color}">${byAffaire[a.code]}h</span>
+                    </div>
+                `).join('');
+        }
+        
+        function renderDurationGrid() {
+            const grid = document.getElementById('duration-grid');
+            grid.innerHTML = DURATIONS.map(d => `
+                <button class="duration-btn" onclick="selectDuration(${d}, this)">${d}h</button>
+            `).join('');
+        }
+        
+        function updateWeekView() {
+            const weekDates = getWeekDates(currentDate);
+            
+            document.getElementById('week-range').textContent = 
+                `Semaine du ${formatDate(weekDates[0], 'short')} au ${formatDate(weekDates[4], 'short')}`;
+            
+            let weekTotal = 0;
+            const weekByAffaire = {};
+            
+            weekDates.forEach(date => {
+                const dayEntries = entries[getDateKey(date)] || [];
+                dayEntries.forEach(e => {
+                    weekTotal += e.duration;
+                    weekByAffaire[e.affaire] = (weekByAffaire[e.affaire] || 0) + e.duration;
+                });
+            });
+            
+            const weekTotalEl = document.getElementById('week-total');
+            weekTotalEl.textContent = weekTotal + 'h';
+            weekTotalEl.className = 'summary-total ' + (weekTotal >= 35 ? 'complete' : 'partial');
+            
+            document.getElementById('week-affaire-summary').innerHTML = AFFAIRES
+                .filter(a => weekByAffaire[a.code])
+                .map(a => `
+                    <div class="affaire-pill">
+                        <div class="dot" style="background: ${a.color}"></div>
+                        <span>${a.label}</span>
+                        <span class="hours" style="color: ${a.color}">${weekByAffaire[a.code]}h</span>
+                    </div>
+                `).join('');
+            
+            const today = new Date().toDateString();
+            document.getElementById('week-days').innerHTML = weekDates.map(date => {
+                const dayEntries = entries[getDateKey(date)] || [];
+                const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                const isToday = date.toDateString() === today;
+                
+                return `
+                    <div class="week-day-card ${isToday ? 'today' : ''}" onclick="goToDate('${getDateKey(date)}')">
+                        <div class="week-day-info">
+                            <h4>${formatDate(date, 'weekday')}</h4>
+                            <p>${formatDate(date, 'short')}</p>
+                        </div>
+                        <div class="week-day-hours" style="color: ${dayTotal >= 8 ? '#10B981' : dayTotal > 0 ? '#F59E0B' : '#D1D5DB'}">
+                            ${dayTotal}h
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateExportView() {
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            let total = 0;
+            let days = 0;
+            
+            Object.entries(entries).forEach(([dateStr, dayEntries]) => {
+                const date = new Date(dateStr);
+                if (date >= monthStart && date <= monthEnd) {
+                    const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                    if (dayTotal > 0) {
+                        total += dayTotal;
+                        days++;
+                    }
+                }
+            });
+            
+            document.getElementById('stat-total').textContent = total + 'h';
+            document.getElementById('stat-days').textContent = days;
+            document.getElementById('stat-avg').textContent = days > 0 ? (total / days).toFixed(1) + 'h' : '0h';
+        }
+        
+        function goToDate(dateStr) {
+            currentDate = new Date(dateStr);
+            document.querySelectorAll('.tab-item')[0].click();
+        }
+        
+        // ==========================================
+        // MODAL
+        // ==========================================
+        
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            selectedDuration = null;
+            document.getElementById('input-affaire').value = '';
+            document.getElementById('input-desc').value = '';
+            document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('selected'));
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+        
+        function closeModalOutside(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        }
+        
+        function selectDuration(duration, btn) {
+            selectedDuration = duration;
+            document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+        
+        async function saveEntry() {
+            const affaire = document.getElementById('input-affaire').value;
+            const description = document.getElementById('input-desc').value;
+            
+            if (!affaire || !selectedDuration) {
+                showToast('Sélectionnez affaire et durée', 'error');
+                return;
+            }
+            
+            const key = getDateKey(currentDate);
+            if (!entries[key]) entries[key] = [];
+            
+            const entry = {
+                id: Date.now(),
+                date: key,
+                affaire,
+                duration: selectedDuration,
+                description
+            };
+            
+            entries[key].push(entry);
+            saveData();
+            
+            // Sync immédiat avec Google Sheets
+            await syncToSheet(entry);
+            
+            closeModal();
+            updateUI();
+            
+            if (navigator.vibrate) navigator.vibrate([10, 50, 10]);
+            showToast('Entrée enregistrée', 'success');
+        }
+        
+        function deleteEntry(index) {
+            if (!confirm('Supprimer cette entrée ?')) return;
+            
+            const key = getDateKey(currentDate);
+            entries[key].splice(index, 1);
+            if (entries[key].length === 0) delete entries[key];
+            
+            saveData();
+            updateUI();
+            showToast('Entrée supprimée');
+        }
+        
+        // ==========================================
+        // EXPORT
+        // ==========================================
+        
+        function exportCSV() {
+            const rows = [['Date', 'Code Affaire', 'Affaire', 'Durée (h)', 'Description']];
+            
+            Object.entries(entries)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .forEach(([dateStr, dayEntries]) => {
+                    dayEntries.forEach(entry => {
+                        const affaire = AFFAIRES.find(a => a.code === entry.affaire);
+                        rows.push([
+                            dateStr,
+                            entry.affaire,
+                            affaire?.label || '',
+                            entry.duration,
+                            entry.description || ''
+                        ]);
+                    });
+                });
+            
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `sandro_temps_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            showToast('CSV téléchargé', 'success');
+        }
+        
+        function shareData() {
+            const weekDates = getWeekDates(currentDate);
+            let text = '📊 Récap semaine - Sandro\n\n';
+            
+            let weekTotal = 0;
+            weekDates.forEach(date => {
+                const dayEntries = entries[getDateKey(date)] || [];
+                const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                weekTotal += dayTotal;
+                text += `${formatDate(date, 'weekday')} ${formatDate(date, 'short')}: ${dayTotal}h\n`;
+            });
+            
+            text += `\n✅ Total: ${weekTotal}h`;
+            
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                navigator.clipboard.writeText(text);
+                showToast('Copié dans le presse-papiers', 'success');
+            }
+        }
+        
+        function clearData() {
+            if (confirm('Effacer toutes les données locales ? Les données dans Google Sheets seront conservées.')) {
+                entries = {};
+                pendingSync = [];
+                saveData();
+                updateUI();
+                showToast('Données locales effacées');
+            }
+        }
+        
+        // ==========================================
+        // TOAST
+        // ==========================================
+        
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
+            
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
