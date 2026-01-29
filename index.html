@@ -715,10 +715,107 @@
         .toast.error {
             background: var(--danger);
         }
+        
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+        
+        .login-screen.hidden {
+            display: none;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 32px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .login-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .login-box h1 {
+            font-size: 24px;
+            color: var(--gray-800);
+            margin-bottom: 8px;
+        }
+        
+        .login-box p {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-bottom: 24px;
+        }
+        
+        .login-box input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .login-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 16px;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="app">
+    <!-- Login Screen -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-box">
+            <div class="login-icon">⏱️</div>
+            <h1>Temps Sandro</h1>
+            <p>Entrez le code d'accès</p>
+            <input type="password" id="password-input" placeholder="••••" maxlength="10" autofocus>
+            <button class="login-btn" onclick="checkPassword()">Accéder</button>
+            <div class="login-error" id="login-error"></div>
+        </div>
+    </div>
+    
+    <div class="app" id="app" style="display: none;">
         <!-- Day View -->
         <div id="day-view" class="view active">
             <div class="header">
@@ -823,7 +920,10 @@
                 <button class="export-btn success" onclick="syncNow()">
                     🔄 Synchroniser maintenant
                 </button>
-                <button class="export-btn primary" onclick="exportCSV()">
+                <button class="export-btn primary" onclick="resyncAll()">
+                    📤 Renvoyer tout vers le Sheet
+                </button>
+                <button class="export-btn secondary" onclick="exportCSV()">
                     📥 Télécharger CSV
                 </button>
                 <button class="export-btn secondary" onclick="shareData()">
@@ -908,6 +1008,9 @@
         // CONFIGURATION
         // ==========================================
         
+        // MOT DE PASSE - Change cette valeur !
+        const APP_PASSWORD = 'sandro2026';
+        
         const AFFAIRES = [
             { code: '2023110021', label: 'SERVICES GÉNÉRAUX', color: '#3B82F6' },
             { code: '2015070014', label: 'POSTER', color: '#10B981' },
@@ -931,6 +1034,36 @@
         // ==========================================
         
         document.addEventListener('DOMContentLoaded', () => {
+            // Vérifier si déjà connecté
+            if (localStorage.getItem('sandro-logged-in') === 'true') {
+                showApp();
+            }
+            
+            // Permettre de valider avec Entrée
+            document.getElementById('password-input').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') checkPassword();
+            });
+        });
+        
+        function checkPassword() {
+            const input = document.getElementById('password-input').value;
+            if (input === APP_PASSWORD) {
+                localStorage.setItem('sandro-logged-in', 'true');
+                showApp();
+            } else {
+                document.getElementById('login-error').textContent = 'Code incorrect';
+                document.getElementById('password-input').value = '';
+                if (navigator.vibrate) navigator.vibrate(200);
+            }
+        }
+        
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app').style.display = 'block';
+            initApp();
+        }
+        
+        function initApp() {
             loadData();
             loadConfig();
             renderDurationGrid();
@@ -941,7 +1074,7 @@
             if (scriptUrl && navigator.onLine) {
                 syncPending();
             }
-        });
+        }
         
         // Écouter les changements de connexion
         window.addEventListener('online', () => {
@@ -1018,17 +1151,21 @@
             document.getElementById('sync-text').textContent = text;
         }
         
-        async function syncToSheet(entry) {
+        async function syncToSheet(entry, skipPending = false) {
             if (!scriptUrl) {
-                pendingSync.push(entry);
-                saveData();
+                if (!skipPending) {
+                    pendingSync.push(entry);
+                    saveData();
+                }
                 updateSyncStatus();
                 return false;
             }
             
             if (!navigator.onLine) {
-                pendingSync.push(entry);
-                saveData();
+                if (!skipPending) {
+                    pendingSync.push(entry);
+                    saveData();
+                }
                 updateSyncStatus();
                 return false;
             }
@@ -1045,22 +1182,22 @@
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // Google Apps Script nécessite no-cors
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload)
                 });
                 
-                // Avec no-cors, on ne peut pas lire la réponse
-                // On considère que c'est OK si pas d'erreur
                 updateSyncStatus();
                 return true;
                 
             } catch (error) {
                 console.error('Sync error:', error);
-                pendingSync.push(entry);
-                saveData();
+                if (!skipPending) {
+                    pendingSync.push(entry);
+                    saveData();
+                }
                 updateSyncStatus();
                 return false;
             }
@@ -1095,6 +1232,52 @@
             await syncPending();
             
             showToast('Synchronisation terminée', 'success');
+        }
+        
+        async function resyncAll() {
+            if (!scriptUrl) {
+                showToast('Configurez l\'URL du script d\'abord', 'error');
+                return;
+            }
+            
+            if (!navigator.onLine) {
+                showToast('Pas de connexion internet', 'error');
+                return;
+            }
+            
+            // Compter les entrées
+            let totalEntries = 0;
+            Object.values(entries).forEach(dayEntries => {
+                totalEntries += dayEntries.length;
+            });
+            
+            if (totalEntries === 0) {
+                showToast('Aucune donnée à envoyer', 'error');
+                return;
+            }
+            
+            if (!confirm(`Renvoyer ${totalEntries} entrées vers le Google Sheet ?`)) {
+                return;
+            }
+            
+            showToast('Envoi en cours...', '');
+            
+            // Envoyer toutes les entrées
+            let sent = 0;
+            for (const [dateKey, dayEntries] of Object.entries(entries)) {
+                for (const entry of dayEntries) {
+                    const entryWithDate = { ...entry, date: dateKey };
+                    try {
+                        await syncToSheet(entryWithDate, true); // true = skip pending
+                        sent++;
+                    } catch (e) {
+                        console.error('Erreur sync:', e);
+                    }
+                }
+            }
+            
+            showToast(`${sent} entrées envoyées !`, 'success');
+            updateSyncStatus();
         }
         
         async function testConnection() {
