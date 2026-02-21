@@ -229,6 +229,53 @@
             gap: 8px;
             flex-wrap: wrap;
         }
+
+        .day-completion {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .day-completion-info {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-500);
+            margin-bottom: 8px;
+        }
+
+        .day-completion-info.complete {
+            color: var(--success);
+        }
+
+        .day-completion-info.missing {
+            color: var(--warning);
+        }
+
+        .day-completion-info.overtime {
+            color: var(--primary-dark);
+        }
+
+        .day-completion-btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #DBEAFE;
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .day-completion-btn:active {
+            transform: scale(0.99);
+        }
+
+        .day-completion-btn:disabled {
+            background: var(--gray-100);
+            color: var(--gray-400);
+            cursor: not-allowed;
+        }
         
         .affaire-pill {
             display: flex;
@@ -285,6 +332,11 @@
         .entry-item.pending {
             opacity: 0.7;
             border: 2px dashed var(--warning);
+        }
+
+        .entry-item.auto-fill {
+            border: 1px solid #BFDBFE;
+            background: #EFF6FF;
         }
         
         .entry-color {
@@ -849,6 +901,12 @@
                     <div class="summary-total empty" id="day-total">0h</div>
                 </div>
                 <div class="affaire-pills" id="affaire-summary"></div>
+                <div class="day-completion">
+                    <div class="day-completion-info" id="day-completion-info">Objectif: 8h</div>
+                    <button class="day-completion-btn" id="btn-complete-day" onclick="completeDayToTarget()">
+                        ⚡ Compléter à 8h en SERVICES GÉNÉRAUX
+                    </button>
+                </div>
             </div>
             
             <div class="entries">
@@ -1019,6 +1077,10 @@
         ];
         
         const DURATIONS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8];
+        const DAILY_TARGET_HOURS = 8;
+        const WEEKLY_TARGET_HOURS = DAILY_TARGET_HOURS * 5;
+        const DEFAULT_COMPLETION_AFFAIRE_CODE = '2023110021';
+        const AUTO_COMPLETION_DESCRIPTION = '[AUTO] Complément jusqu\'à 8h';
         
         // ==========================================
         // STATE
@@ -1151,12 +1213,32 @@
             
             document.getElementById('sync-text').textContent = text;
         }
+
+        function getStableEntryId(entry) {
+            if (entry?.id !== undefined && entry?.id !== null && entry?.id !== '') {
+                return String(entry.id);
+            }
+            return [
+                entry?.date || '',
+                entry?.affaire || '',
+                entry?.duration || '',
+                entry?.description || ''
+            ].join('|');
+        }
+
+        function queuePending(entry) {
+            const entryId = getStableEntryId(entry);
+            const alreadyPending = pendingSync.some(p => getStableEntryId(p) === entryId);
+            if (!alreadyPending) {
+                pendingSync.push(entry);
+                saveData();
+            }
+        }
         
         async function syncToSheet(entry, skipPending = false) {
             if (!scriptUrl) {
                 if (!skipPending) {
-                    pendingSync.push(entry);
-                    saveData();
+                    queuePending(entry);
                 }
                 updateSyncStatus();
                 return false;
@@ -1164,8 +1246,7 @@
             
             if (!navigator.onLine) {
                 if (!skipPending) {
-                    pendingSync.push(entry);
-                    saveData();
+                    queuePending(entry);
                 }
                 updateSyncStatus();
                 return false;
@@ -1174,6 +1255,7 @@
             try {
                 const affaire = AFFAIRES.find(a => a.code === entry.affaire);
                 const payload = {
+                    entryId: getStableEntryId(entry),
                     date: entry.date,
                     affaireCode: entry.affaire,
                     affaireLabel: affaire?.label || '',
@@ -1183,12 +1265,25 @@
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(payload)
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const responseType = response.headers.get('content-type') || '';
+                if (!responseType.includes('application/json')) {
+                    throw new Error('Réponse non JSON du script');
+                }
+
+                const result = await response.json();
+                if (result?.success === false) {
+                    throw new Error(result?.message || 'Le script a refusé la synchronisation');
+                }
                 
                 updateSyncStatus();
                 return true;
@@ -1196,8 +1291,7 @@
             } catch (error) {
                 console.error('Sync error:', error);
                 if (!skipPending) {
-                    pendingSync.push(entry);
-                    saveData();
+                    queuePending(entry);
                 }
                 updateSyncStatus();
                 return false;
@@ -1265,19 +1359,24 @@
             
             // Envoyer toutes les entrées
             let sent = 0;
+            let failed = 0;
             for (const [dateKey, dayEntries] of Object.entries(entries)) {
                 for (const entry of dayEntries) {
                     const entryWithDate = { ...entry, date: dateKey };
-                    try {
-                        await syncToSheet(entryWithDate, true); // true = skip pending
+                    const synced = await syncToSheet(entryWithDate, true); // true = skip pending
+                    if (synced) {
                         sent++;
-                    } catch (e) {
-                        console.error('Erreur sync:', e);
+                    } else {
+                        failed++;
                     }
                 }
             }
             
-            showToast(`${sent} entrées envoyées !`, 'success');
+            if (failed > 0) {
+                showToast(`${sent} envoyées, ${failed} en échec`, 'error');
+            } else {
+                showToast(`${sent} entrées envoyées !`, 'success');
+            }
             updateSyncStatus();
         }
         
@@ -1294,9 +1393,23 @@
             try {
                 // Tester avec une requête GET
                 const response = await fetch(scriptUrl + '?test=1', {
-                    method: 'GET',
-                    mode: 'no-cors'
+                    method: 'GET'
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const responseType = response.headers.get('content-type') || '';
+                if (!responseType.includes('application/json')) {
+                    throw new Error('Réponse non JSON du script');
+                }
+
+                const result = await response.json();
+                const hasKnownSuccess = result?.status === 'OK' || result?.success === true;
+                if (!hasKnownSuccess) {
+                    throw new Error(result?.message || 'Réponse inattendue du script');
+                }
                 
                 document.getElementById('config-status').textContent = '✅ Connexion établie';
                 document.getElementById('config-status').className = 'config-status success';
@@ -1314,7 +1427,27 @@
         // ==========================================
         
         function getDateKey(date) {
-            return date.toISOString().split('T')[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function roundHours(value) {
+            return Math.round((Number(value) || 0) * 100) / 100;
+        }
+
+        function formatHours(value) {
+            const rounded = roundHours(value);
+            return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+        }
+
+        function isAutoCompletionEntry(entry) {
+            return entry?.autoFill === true || (entry?.description || '').startsWith('[AUTO]');
+        }
+
+        function getDayTotal(dayEntries) {
+            return roundHours(dayEntries.reduce((sum, e) => sum + (Number(e.duration) || 0), 0));
         }
         
         function formatDate(date, format) {
@@ -1396,15 +1529,16 @@
             
             container.innerHTML = dayEntries.map((entry, idx) => {
                 const affaire = AFFAIRES.find(a => a.code === entry.affaire) || {};
-                const isPending = pendingSync.some(p => p.id === entry.id);
+                const isPending = pendingSync.some(p => getStableEntryId(p) === getStableEntryId(entry));
+                const isAutoFill = isAutoCompletionEntry(entry);
                 return `
-                    <div class="entry-item ${isPending ? 'pending' : ''}">
+                    <div class="entry-item ${isPending ? 'pending' : ''} ${isAutoFill ? 'auto-fill' : ''}">
                         <div class="entry-color" style="background: ${affaire.color || '#CBD5E1'}"></div>
                         <div class="entry-content">
-                            <div class="entry-affaire">${affaire.label || 'Non défini'} ${isPending ? '⏳' : ''}</div>
+                            <div class="entry-affaire">${affaire.label || 'Non défini'} ${isAutoFill ? '• AUTO' : ''} ${isPending ? '⏳' : ''}</div>
                             <div class="entry-desc">${entry.description || 'Sans description'}</div>
                         </div>
-                        <div class="entry-duration">${entry.duration}h</div>
+                        <div class="entry-duration">${formatHours(entry.duration)}h</div>
                         <button class="entry-delete" onclick="deleteEntry(${idx})">×</button>
                     </div>
                 `;
@@ -1412,16 +1546,19 @@
         }
         
         function renderSummary(dayEntries) {
-            const total = dayEntries.reduce((sum, e) => sum + (e.duration || 0), 0);
+            const total = getDayTotal(dayEntries);
+            const missing = roundHours(Math.max(0, DAILY_TARGET_HOURS - total));
+            const overtime = roundHours(Math.max(0, total - DAILY_TARGET_HOURS));
+            const hasAutoCompletion = dayEntries.some(isAutoCompletionEntry);
             
             const totalEl = document.getElementById('day-total');
-            totalEl.textContent = total + 'h';
-            totalEl.className = 'summary-total ' + (total >= 8 ? 'complete' : total > 0 ? 'partial' : 'empty');
+            totalEl.textContent = formatHours(total) + 'h';
+            totalEl.className = 'summary-total ' + (total >= DAILY_TARGET_HOURS ? 'complete' : total > 0 ? 'partial' : 'empty');
             
             const pillsContainer = document.getElementById('affaire-summary');
             const byAffaire = {};
             dayEntries.forEach(e => {
-                byAffaire[e.affaire] = (byAffaire[e.affaire] || 0) + e.duration;
+                byAffaire[e.affaire] = roundHours((byAffaire[e.affaire] || 0) + (Number(e.duration) || 0));
             });
             
             pillsContainer.innerHTML = AFFAIRES
@@ -1430,9 +1567,31 @@
                     <div class="affaire-pill">
                         <div class="dot" style="background: ${a.color}"></div>
                         <span>${a.label}</span>
-                        <span class="hours" style="color: ${a.color}">${byAffaire[a.code]}h</span>
+                        <span class="hours" style="color: ${a.color}">${formatHours(byAffaire[a.code])}h</span>
                     </div>
                 `).join('');
+
+            const completionInfoEl = document.getElementById('day-completion-info');
+            const completionBtn = document.getElementById('btn-complete-day');
+
+            if (missing > 0) {
+                completionInfoEl.textContent = `Il manque ${formatHours(missing)}h pour atteindre ${DAILY_TARGET_HOURS}h`;
+                completionInfoEl.className = 'day-completion-info missing';
+                completionBtn.disabled = hasAutoCompletion;
+                completionBtn.textContent = hasAutoCompletion
+                    ? '✅ Complément déjà ajouté'
+                    : '⚡ Compléter à 8h en SERVICES GÉNÉRAUX';
+            } else if (overtime > 0) {
+                completionInfoEl.textContent = `+${formatHours(overtime)}h au-dessus de ${DAILY_TARGET_HOURS}h`;
+                completionInfoEl.className = 'day-completion-info overtime';
+                completionBtn.disabled = true;
+                completionBtn.textContent = 'Journée au-dessus de 8h';
+            } else {
+                completionInfoEl.textContent = `Journée complète: ${DAILY_TARGET_HOURS}h`;
+                completionInfoEl.className = 'day-completion-info complete';
+                completionBtn.disabled = true;
+                completionBtn.textContent = 'Journée complète';
+            }
         }
         
         function renderDurationGrid() {
@@ -1454,14 +1613,14 @@
             weekDates.forEach(date => {
                 const dayEntries = entries[getDateKey(date)] || [];
                 dayEntries.forEach(e => {
-                    weekTotal += e.duration;
-                    weekByAffaire[e.affaire] = (weekByAffaire[e.affaire] || 0) + e.duration;
+                    weekTotal += Number(e.duration) || 0;
+                    weekByAffaire[e.affaire] = roundHours((weekByAffaire[e.affaire] || 0) + (Number(e.duration) || 0));
                 });
             });
             
             const weekTotalEl = document.getElementById('week-total');
-            weekTotalEl.textContent = weekTotal + 'h';
-            weekTotalEl.className = 'summary-total ' + (weekTotal >= 35 ? 'complete' : 'partial');
+            weekTotalEl.textContent = formatHours(weekTotal) + 'h';
+            weekTotalEl.className = 'summary-total ' + (weekTotal >= WEEKLY_TARGET_HOURS ? 'complete' : 'partial');
             
             document.getElementById('week-affaire-summary').innerHTML = AFFAIRES
                 .filter(a => weekByAffaire[a.code])
@@ -1469,14 +1628,14 @@
                     <div class="affaire-pill">
                         <div class="dot" style="background: ${a.color}"></div>
                         <span>${a.label}</span>
-                        <span class="hours" style="color: ${a.color}">${weekByAffaire[a.code]}h</span>
+                        <span class="hours" style="color: ${a.color}">${formatHours(weekByAffaire[a.code])}h</span>
                     </div>
                 `).join('');
             
             const today = new Date().toDateString();
             document.getElementById('week-days').innerHTML = weekDates.map(date => {
                 const dayEntries = entries[getDateKey(date)] || [];
-                const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                const dayTotal = getDayTotal(dayEntries);
                 const isToday = date.toDateString() === today;
                 
                 return `
@@ -1485,8 +1644,8 @@
                             <h4>${formatDate(date, 'weekday')}</h4>
                             <p>${formatDate(date, 'short')}</p>
                         </div>
-                        <div class="week-day-hours" style="color: ${dayTotal >= 8 ? '#10B981' : dayTotal > 0 ? '#F59E0B' : '#D1D5DB'}">
-                            ${dayTotal}h
+                        <div class="week-day-hours" style="color: ${dayTotal >= DAILY_TARGET_HOURS ? '#10B981' : dayTotal > 0 ? '#F59E0B' : '#D1D5DB'}">
+                            ${formatHours(dayTotal)}h / ${DAILY_TARGET_HOURS}h
                         </div>
                     </div>
                 `;
@@ -1504,7 +1663,7 @@
             Object.entries(entries).forEach(([dateStr, dayEntries]) => {
                 const date = new Date(dateStr);
                 if (date >= monthStart && date <= monthEnd) {
-                    const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                    const dayTotal = getDayTotal(dayEntries);
                     if (dayTotal > 0) {
                         total += dayTotal;
                         days++;
@@ -1512,7 +1671,7 @@
                 }
             });
             
-            document.getElementById('stat-total').textContent = total + 'h';
+            document.getElementById('stat-total').textContent = formatHours(total) + 'h';
             document.getElementById('stat-days').textContent = days;
             document.getElementById('stat-avg').textContent = days > 0 ? (total / days).toFixed(1) + 'h' : '0h';
         }
@@ -1550,6 +1709,54 @@
             btn.classList.add('selected');
             if (navigator.vibrate) navigator.vibrate(10);
         }
+
+        async function completeDayToTarget() {
+            const key = getDateKey(currentDate);
+            const dayEntries = entries[key] || [];
+            const total = getDayTotal(dayEntries);
+            const missing = roundHours(Math.max(0, DAILY_TARGET_HOURS - total));
+
+            if (missing <= 0) {
+                showToast(`Journée déjà à ${formatHours(total)}h`, 'success');
+                updateUI();
+                return;
+            }
+
+            if (dayEntries.some(isAutoCompletionEntry)) {
+                showToast('Complément déjà ajouté pour ce jour');
+                updateUI();
+                return;
+            }
+
+            const defaultAffaire = AFFAIRES.find(a => a.code === DEFAULT_COMPLETION_AFFAIRE_CODE);
+            if (!defaultAffaire) {
+                showToast('Affaire SERVICES GÉNÉRAUX introuvable', 'error');
+                return;
+            }
+
+            if (!entries[key]) entries[key] = [];
+
+            const entry = {
+                id: `auto-${key}`,
+                date: key,
+                affaire: DEFAULT_COMPLETION_AFFAIRE_CODE,
+                duration: missing,
+                description: AUTO_COMPLETION_DESCRIPTION,
+                autoFill: true
+            };
+
+            entries[key].push(entry);
+            saveData();
+
+            const synced = await syncToSheet(entry);
+            updateUI();
+
+            if (synced) {
+                showToast(`+${formatHours(missing)}h ajoutées en ${defaultAffaire.label}`, 'success');
+            } else {
+                showToast(`+${formatHours(missing)}h ajoutées (sync en attente)`);
+            }
+        }
         
         async function saveEntry() {
             const affaire = document.getElementById('input-affaire').value;
@@ -1564,7 +1771,7 @@
             if (!entries[key]) entries[key] = [];
             
             const entry = {
-                id: Date.now(),
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                 date: key,
                 affaire,
                 duration: selectedDuration,
@@ -1575,13 +1782,17 @@
             saveData();
             
             // Sync immédiat avec Google Sheets
-            await syncToSheet(entry);
+            const synced = await syncToSheet(entry);
             
             closeModal();
             updateUI();
             
             if (navigator.vibrate) navigator.vibrate([10, 50, 10]);
-            showToast('Entrée enregistrée', 'success');
+            if (synced) {
+                showToast('Entrée enregistrée', 'success');
+            } else {
+                showToast('Entrée enregistrée (sync en attente)');
+            }
         }
         
         function deleteEntry(index) {
@@ -1623,7 +1834,7 @@
             
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `sandro_temps_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `sandro_temps_${getDateKey(new Date())}.csv`;
             a.click();
             
             showToast('CSV téléchargé', 'success');
@@ -1636,12 +1847,12 @@
             let weekTotal = 0;
             weekDates.forEach(date => {
                 const dayEntries = entries[getDateKey(date)] || [];
-                const dayTotal = dayEntries.reduce((sum, e) => sum + e.duration, 0);
+                const dayTotal = getDayTotal(dayEntries);
                 weekTotal += dayTotal;
-                text += `${formatDate(date, 'weekday')} ${formatDate(date, 'short')}: ${dayTotal}h\n`;
+                text += `${formatDate(date, 'weekday')} ${formatDate(date, 'short')}: ${formatHours(dayTotal)}h / ${DAILY_TARGET_HOURS}h\n`;
             });
             
-            text += `\n✅ Total: ${weekTotal}h`;
+            text += `\n✅ Total: ${formatHours(weekTotal)}h`;
             
             if (navigator.share) {
                 navigator.share({ text });
