@@ -1389,6 +1389,15 @@
             </div>
             
             <div class="export-card">
+                <h3>Importer des données</h3>
+                <button class="export-btn primary" onclick="document.getElementById('import-file').click()">
+                    📥 Importer un fichier JSON (depuis le Sheet)
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+                <div class="config-status" id="import-status"></div>
+            </div>
+
+            <div class="export-card">
                 <h3>Données locales</h3>
                 <button class="export-btn secondary" onclick="clearData()">
                     🗑️ Effacer les données locales
@@ -2545,6 +2554,56 @@
             }
         }
         
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('import-status');
+            statusEl.textContent = '⏳ Lecture du fichier...';
+            statusEl.className = 'config-status';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    let addedCount = 0;
+                    let skippedCount = 0;
+
+                    for (const [dateKey, dayEntries] of Object.entries(imported)) {
+                        if (!Array.isArray(dayEntries)) continue;
+                        if (!entries[dateKey]) entries[dateKey] = [];
+
+                        const existingIds = new Set(entries[dateKey].map(e => getStableEntryId(e)));
+
+                        for (const entry of dayEntries) {
+                            const entryId = getStableEntryId(entry);
+                            if (existingIds.has(entryId)) {
+                                skippedCount++;
+                            } else {
+                                entries[dateKey].push(entry);
+                                existingIds.add(entryId);
+                                addedCount++;
+                            }
+                        }
+                    }
+
+                    saveData();
+                    updateUI();
+
+                    statusEl.textContent = `✅ ${addedCount} entrées importées, ${skippedCount} doublons ignorés`;
+                    statusEl.className = 'config-status success';
+                    showToast(`${addedCount} entrées importées`, 'success');
+                } catch (err) {
+                    statusEl.textContent = '❌ Fichier invalide: ' + err.message;
+                    statusEl.className = 'config-status error';
+                    showToast('Erreur d\'import', 'error');
+                }
+
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         function clearData() {
             if (confirm('Effacer toutes les données locales ? Les données dans Google Sheets seront conservées.')) {
                 entries = {};
