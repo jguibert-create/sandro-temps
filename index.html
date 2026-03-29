@@ -578,11 +578,16 @@
             color: white;
         }
         
+        /* View toggling */
+        #day-view:not(.active) {
+            display: none;
+        }
+
         /* Week View */
         .week-view {
             display: none;
         }
-        
+
         .week-view.active {
             display: block;
         }
@@ -769,6 +774,314 @@
             background: var(--danger);
         }
         
+        /* Month View */
+        .month-view {
+            display: none;
+        }
+
+        .month-view.active {
+            display: block;
+        }
+
+        .month-nav {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .month-nav button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .month-nav button:active {
+            transform: scale(0.95);
+            background: var(--gray-200);
+        }
+
+        .month-nav .month-label {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-800);
+            text-transform: capitalize;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        .kpi-card .kpi-sub {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 2px;
+        }
+
+        .kpi-card.highlight .kpi-value {
+            color: var(--primary);
+        }
+
+        .kpi-card.success .kpi-value {
+            color: var(--success);
+        }
+
+        .kpi-card.warning .kpi-value {
+            color: var(--warning);
+        }
+
+        .kpi-card.danger .kpi-value {
+            color: var(--danger);
+        }
+
+        /* Occupation bar */
+        .occupation-section {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .occupation-section h3 {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .occupation-bar-container {
+            background: var(--gray-100);
+            border-radius: 10px;
+            height: 28px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .occupation-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: white;
+            min-width: 40px;
+        }
+
+        .occupation-bar-legend {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        /* Affaire breakdown bars */
+        .affaire-breakdown {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .affaire-breakdown h3 {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .affaire-bar-row {
+            margin-bottom: 12px;
+        }
+
+        .affaire-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .affaire-bar-label .name {
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        .affaire-bar-label .hours {
+            color: var(--gray-500);
+        }
+
+        .affaire-bar-track {
+            background: var(--gray-100);
+            border-radius: 6px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .affaire-bar-value {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        /* Mini calendar */
+        .mini-calendar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .mini-calendar h3 {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .cal-header {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-400);
+            padding: 4px 0;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .cal-day.empty {
+            background: transparent;
+        }
+
+        .cal-day.weekend {
+            background: var(--gray-50);
+            color: var(--gray-300);
+        }
+
+        .cal-day.workday {
+            background: var(--gray-50);
+            color: var(--gray-400);
+        }
+
+        .cal-day.partial {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .cal-day.complete {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .cal-day.overtime {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .cal-day.today {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+        }
+
+        .cal-day .cal-hours {
+            font-size: 8px;
+            font-weight: 400;
+        }
+
+        .cal-legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .cal-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+
+        .cal-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        /* Month export buttons */
+        .month-export {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+
+        .month-export h3 {
+            font-size: 14px;
+            color: var(--gray-500);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
         /* Login Screen */
         .login-screen {
             position: fixed;
@@ -949,6 +1262,80 @@
             <div id="week-days"></div>
         </div>
         
+        <!-- Month View -->
+        <div id="month-view" class="month-view">
+            <div class="header">
+                <h1>📊 Relevé Mensuel</h1>
+                <p>Occupation et export contrat</p>
+            </div>
+
+            <div class="month-nav">
+                <button onclick="changeMonth(-1)">◀</button>
+                <span class="month-label" id="month-view-label">Mars 2026</span>
+                <button onclick="changeMonth(1)">▶</button>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card highlight" id="kpi-occupation">
+                    <div class="kpi-value" id="kpi-occupation-value">0%</div>
+                    <div class="kpi-label">Taux d'occupation</div>
+                    <div class="kpi-sub" id="kpi-occupation-sub"></div>
+                </div>
+                <div class="kpi-card" id="kpi-hours">
+                    <div class="kpi-value" id="kpi-hours-value">0h</div>
+                    <div class="kpi-label">Heures saisies</div>
+                    <div class="kpi-sub" id="kpi-hours-sub"></div>
+                </div>
+                <div class="kpi-card" id="kpi-worked">
+                    <div class="kpi-value" id="kpi-worked-value">0</div>
+                    <div class="kpi-label">Jours saisis</div>
+                    <div class="kpi-sub" id="kpi-worked-sub"></div>
+                </div>
+                <div class="kpi-card" id="kpi-remaining">
+                    <div class="kpi-value" id="kpi-remaining-value">0h</div>
+                    <div class="kpi-label">Heures restantes</div>
+                    <div class="kpi-sub" id="kpi-remaining-sub"></div>
+                </div>
+            </div>
+
+            <div class="occupation-section">
+                <h3>Progression du mois</h3>
+                <div class="occupation-bar-container">
+                    <div class="occupation-bar-fill" id="occupation-bar" style="width: 0%; background: var(--primary);">0%</div>
+                </div>
+                <div class="occupation-bar-legend">
+                    <span id="occupation-done">0h saisies</span>
+                    <span id="occupation-target">/ 0h contractuelles</span>
+                </div>
+            </div>
+
+            <div class="affaire-breakdown">
+                <h3>Répartition par affaire</h3>
+                <div id="affaire-bars"></div>
+            </div>
+
+            <div class="mini-calendar">
+                <h3>Calendrier du mois</h3>
+                <div class="cal-grid" id="cal-grid"></div>
+                <div class="cal-legend">
+                    <div class="cal-legend-item"><div class="cal-legend-dot" style="background: #D1FAE5;"></div> 8h+</div>
+                    <div class="cal-legend-item"><div class="cal-legend-dot" style="background: #FEF3C7;"></div> Partiel</div>
+                    <div class="cal-legend-item"><div class="cal-legend-dot" style="background: #DBEAFE;"></div> >8h</div>
+                    <div class="cal-legend-item"><div class="cal-legend-dot" style="background: var(--gray-50); border: 1px solid var(--gray-200);"></div> Vide / WE</div>
+                </div>
+            </div>
+
+            <div class="month-export">
+                <h3>Export relevé mensuel</h3>
+                <button class="export-btn primary" onclick="exportMonthlyCSV()">
+                    📄 Télécharger le relevé du mois (CSV)
+                </button>
+                <button class="export-btn secondary" onclick="shareMonthlyRecap()">
+                    📤 Partager le récap du mois
+                </button>
+            </div>
+        </div>
+
         <!-- Export View -->
         <div id="export-view" class="export-view">
             <div class="header">
@@ -1019,6 +1406,10 @@
         <button class="tab-item" onclick="switchView('week')">
             <span class="icon">📊</span>
             Semaine
+        </button>
+        <button class="tab-item" onclick="switchView('month')">
+            <span class="icon">📋</span>
+            Mois
         </button>
         <button class="tab-item" onclick="switchView('export')">
             <span class="icon">⚙️</span>
@@ -1491,13 +1882,14 @@
         }
         
         function switchView(view) {
-            document.querySelectorAll('.view, .week-view, .export-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.view, .week-view, .month-view, .export-view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            
+
             document.getElementById(view + '-view').classList.add('active');
             event.target.closest('.tab-item').classList.add('active');
-            
+
             if (view === 'week') updateWeekView();
+            if (view === 'month') updateMonthView();
             if (view === 'export') updateExportView();
         }
         
@@ -1807,6 +2199,297 @@
             showToast('Entrée supprimée');
         }
         
+        // ==========================================
+        // MONTH VIEW
+        // ==========================================
+
+        let selectedMonth = new Date(); // tracks which month is displayed
+
+        function changeMonth(delta) {
+            selectedMonth.setMonth(selectedMonth.getMonth() + delta);
+            updateMonthView();
+        }
+
+        function getWorkingDaysInMonth(year, month) {
+            // French public holidays (fixed dates)
+            const fixedHolidays = [
+                `${year}-01-01`, // Nouvel An
+                `${year}-05-01`, // Fête du Travail
+                `${year}-05-08`, // Victoire 1945
+                `${year}-07-14`, // Fête nationale
+                `${year}-08-15`, // Assomption
+                `${year}-11-01`, // Toussaint
+                `${year}-11-11`, // Armistice
+                `${year}-12-25`, // Noël
+            ];
+
+            // Easter-based holidays (approximate — covers 2024-2030)
+            const easterDates = {
+                2024: '2024-03-31', 2025: '2025-04-20', 2026: '2026-04-05',
+                2027: '2027-03-28', 2028: '2028-04-16', 2029: '2029-04-01',
+                2030: '2030-04-21'
+            };
+            const easter = easterDates[year];
+            if (easter) {
+                const e = new Date(easter);
+                const easterMonday = new Date(e); easterMonday.setDate(e.getDate() + 1);
+                const ascension = new Date(e); ascension.setDate(e.getDate() + 39);
+                const whitMonday = new Date(e); whitMonday.setDate(e.getDate() + 50);
+                [easterMonday, ascension, whitMonday].forEach(d => {
+                    fixedHolidays.push(getDateKey(d));
+                });
+            }
+
+            const holidaySet = new Set(fixedHolidays);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let workingDays = 0;
+            const dayDetails = [];
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month, d);
+                const dow = date.getDay();
+                const key = getDateKey(date);
+                const isWeekend = (dow === 0 || dow === 6);
+                const isHoliday = holidaySet.has(key);
+                const isWorkday = !isWeekend && !isHoliday;
+                if (isWorkday) workingDays++;
+                dayDetails.push({ date, key, day: d, dow, isWeekend, isHoliday, isWorkday });
+            }
+
+            return { workingDays, dayDetails, daysInMonth };
+        }
+
+        function updateMonthView() {
+            const year = selectedMonth.getFullYear();
+            const month = selectedMonth.getMonth();
+            const monthName = new Date(year, month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            document.getElementById('month-view-label').textContent = monthName;
+
+            const { workingDays, dayDetails } = getWorkingDaysInMonth(year, month);
+            const contractualHours = workingDays * DAILY_TARGET_HOURS;
+
+            // Aggregate hours for the month
+            let totalHours = 0;
+            let daysWorked = 0;
+            const affaireHours = {};
+
+            dayDetails.forEach(({ key }) => {
+                const dayEntries = entries[key] || [];
+                const dayTotal = getDayTotal(dayEntries);
+                if (dayTotal > 0) {
+                    totalHours += dayTotal;
+                    daysWorked++;
+                    dayEntries.forEach(e => {
+                        affaireHours[e.affaire] = roundHours((affaireHours[e.affaire] || 0) + (Number(e.duration) || 0));
+                    });
+                }
+            });
+
+            totalHours = roundHours(totalHours);
+            const remaining = roundHours(Math.max(0, contractualHours - totalHours));
+            const occupationPct = contractualHours > 0 ? Math.min(100, roundHours((totalHours / contractualHours) * 100)) : 0;
+
+            // KPIs
+            document.getElementById('kpi-occupation-value').textContent = occupationPct + '%';
+            document.getElementById('kpi-occupation-sub').textContent = `sur ${contractualHours}h contractuelles`;
+            const kpiOccCard = document.getElementById('kpi-occupation');
+            kpiOccCard.className = 'kpi-card ' + (occupationPct >= 100 ? 'success' : occupationPct >= 75 ? 'highlight' : 'warning');
+
+            document.getElementById('kpi-hours-value').textContent = formatHours(totalHours) + 'h';
+            document.getElementById('kpi-hours-sub').textContent = `/ ${contractualHours}h`;
+
+            document.getElementById('kpi-worked-value').textContent = daysWorked;
+            document.getElementById('kpi-worked-sub').textContent = `/ ${workingDays} jours ouvrés`;
+
+            document.getElementById('kpi-remaining-value').textContent = formatHours(remaining) + 'h';
+            const remainingDays = DAILY_TARGET_HOURS > 0 ? Math.ceil(remaining / DAILY_TARGET_HOURS) : 0;
+            document.getElementById('kpi-remaining-sub').textContent = remaining > 0 ? `~${remainingDays} jours restants` : 'Mois complet';
+            const kpiRemCard = document.getElementById('kpi-remaining');
+            kpiRemCard.className = 'kpi-card ' + (remaining <= 0 ? 'success' : remaining <= contractualHours * 0.25 ? 'highlight' : 'warning');
+
+            // Occupation bar
+            const bar = document.getElementById('occupation-bar');
+            bar.style.width = occupationPct + '%';
+            bar.textContent = occupationPct + '%';
+            bar.style.background = occupationPct >= 100 ? 'var(--success)' : occupationPct >= 75 ? 'var(--primary)' : 'var(--warning)';
+            document.getElementById('occupation-done').textContent = formatHours(totalHours) + 'h saisies';
+            document.getElementById('occupation-target').textContent = '/ ' + contractualHours + 'h contractuelles';
+
+            // Affaire breakdown bars
+            const barsContainer = document.getElementById('affaire-bars');
+            if (totalHours > 0) {
+                barsContainer.innerHTML = AFFAIRES.map(a => {
+                    const h = affaireHours[a.code] || 0;
+                    const pct = roundHours((h / totalHours) * 100);
+                    return `
+                        <div class="affaire-bar-row">
+                            <div class="affaire-bar-label">
+                                <span class="name">${a.label}</span>
+                                <span class="hours">${formatHours(h)}h (${pct}%)</span>
+                            </div>
+                            <div class="affaire-bar-track">
+                                <div class="affaire-bar-value" style="width: ${pct}%; background: ${a.color};"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                barsContainer.innerHTML = '<p style="color: var(--gray-400); font-size: 13px; text-align: center;">Aucune donnée ce mois</p>';
+            }
+
+            // Mini calendar
+            renderMiniCalendar(year, month, dayDetails);
+        }
+
+        function renderMiniCalendar(year, month, dayDetails) {
+            const grid = document.getElementById('cal-grid');
+            const todayKey = getDateKey(new Date());
+            const headers = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+            let html = headers.map(h => `<div class="cal-header">${h}</div>`).join('');
+
+            // Offset for first day: getDay() returns 0=Sun, we want Mon=0
+            const firstDow = dayDetails[0].dow;
+            const offset = firstDow === 0 ? 6 : firstDow - 1;
+            for (let i = 0; i < offset; i++) {
+                html += '<div class="cal-day empty"></div>';
+            }
+
+            dayDetails.forEach(({ key, day, isWeekend, isWorkday }) => {
+                const dayEntries = entries[key] || [];
+                const dayTotal = getDayTotal(dayEntries);
+                const isToday = key === todayKey;
+
+                let cls = 'cal-day';
+                if (isWeekend) {
+                    cls += ' weekend';
+                } else if (dayTotal >= DAILY_TARGET_HOURS + 0.5) {
+                    cls += ' overtime';
+                } else if (dayTotal >= DAILY_TARGET_HOURS) {
+                    cls += ' complete';
+                } else if (dayTotal > 0) {
+                    cls += ' partial';
+                } else {
+                    cls += ' workday';
+                }
+                if (isToday) cls += ' today';
+
+                const hoursLabel = dayTotal > 0 ? `<span class="cal-hours">${formatHours(dayTotal)}h</span>` : '';
+                html += `<div class="${cls}">${day}${hoursLabel}</div>`;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function exportMonthlyCSV() {
+            const year = selectedMonth.getFullYear();
+            const month = selectedMonth.getMonth();
+            const { workingDays, dayDetails } = getWorkingDaysInMonth(year, month);
+            const contractualHours = workingDays * DAILY_TARGET_HOURS;
+            const monthLabel = new Date(year, month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+            const rows = [];
+            // Header section
+            rows.push(['Relevé mensuel - Sandro', '', '', '', '']);
+            rows.push(['Mois', monthLabel, '', '', '']);
+            rows.push(['Jours ouvrés', workingDays, '', '', '']);
+            rows.push(['Heures contractuelles', contractualHours, '', '', '']);
+            rows.push(['', '', '', '', '']);
+            rows.push(['Date', 'Jour', 'Code Affaire', 'Affaire', 'Durée (h)', 'Description']);
+
+            let totalHours = 0;
+            const affaireTotals = {};
+
+            dayDetails.forEach(({ key, date, isWeekend, isHoliday, isWorkday }) => {
+                const dayEntries = entries[key] || [];
+                const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+
+                if (dayEntries.length === 0 && isWorkday) {
+                    rows.push([key, dayName, '', '', 0, isHoliday ? 'Jour férié' : '']);
+                } else {
+                    dayEntries.forEach(entry => {
+                        const affaire = AFFAIRES.find(a => a.code === entry.affaire);
+                        rows.push([
+                            key,
+                            dayName,
+                            entry.affaire,
+                            affaire?.label || '',
+                            entry.duration,
+                            entry.description || ''
+                        ]);
+                        totalHours += Number(entry.duration) || 0;
+                        affaireTotals[entry.affaire] = roundHours((affaireTotals[entry.affaire] || 0) + (Number(entry.duration) || 0));
+                    });
+                }
+            });
+
+            // Summary footer
+            rows.push(['', '', '', '', '', '']);
+            rows.push(['TOTAL', '', '', '', roundHours(totalHours), '']);
+            rows.push(['Taux occupation', '', '', '', roundHours((totalHours / contractualHours) * 100) + '%', '']);
+            rows.push(['', '', '', '', '', '']);
+            rows.push(['Récap par affaire', '', '', '', '', '']);
+            AFFAIRES.forEach(a => {
+                const h = affaireTotals[a.code] || 0;
+                if (h > 0) rows.push(['', '', a.code, a.label, h, '']);
+            });
+
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            const monthNum = String(month + 1).padStart(2, '0');
+            a.download = `releve_sandro_${year}-${monthNum}.csv`;
+            a.click();
+
+            showToast('Relevé mensuel téléchargé', 'success');
+        }
+
+        function shareMonthlyRecap() {
+            const year = selectedMonth.getFullYear();
+            const month = selectedMonth.getMonth();
+            const { workingDays, dayDetails } = getWorkingDaysInMonth(year, month);
+            const contractualHours = workingDays * DAILY_TARGET_HOURS;
+            const monthLabel = new Date(year, month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+            let totalHours = 0;
+            let daysWorked = 0;
+            const affaireHours = {};
+
+            dayDetails.forEach(({ key }) => {
+                const dayEntries = entries[key] || [];
+                const dayTotal = getDayTotal(dayEntries);
+                if (dayTotal > 0) {
+                    totalHours += dayTotal;
+                    daysWorked++;
+                    dayEntries.forEach(e => {
+                        affaireHours[e.affaire] = roundHours((affaireHours[e.affaire] || 0) + (Number(e.duration) || 0));
+                    });
+                }
+            });
+            totalHours = roundHours(totalHours);
+            const pct = contractualHours > 0 ? roundHours((totalHours / contractualHours) * 100) : 0;
+
+            let text = `📋 Relevé mensuel - Sandro\n`;
+            text += `📅 ${monthLabel}\n\n`;
+            text += `Heures: ${formatHours(totalHours)}h / ${contractualHours}h\n`;
+            text += `Jours: ${daysWorked} / ${workingDays} ouvrés\n`;
+            text += `Occupation: ${pct}%\n\n`;
+            text += `Répartition:\n`;
+            AFFAIRES.forEach(a => {
+                const h = affaireHours[a.code] || 0;
+                if (h > 0) text += `  ${a.label}: ${formatHours(h)}h\n`;
+            });
+
+            if (navigator.share) {
+                navigator.share({ text });
+            } else {
+                navigator.clipboard.writeText(text);
+                showToast('Récap copié dans le presse-papiers', 'success');
+            }
+        }
+
         // ==========================================
         // EXPORT
         // ==========================================
