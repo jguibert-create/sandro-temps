@@ -1389,9 +1389,20 @@
             </div>
             
             <div class="export-card">
-                <h3>Importer des données</h3>
+                <h3>Recharger depuis le Sheet</h3>
+                <button class="export-btn success" onclick="reloadFromSheet('replace')">
+                    ☁️ Recharger depuis le Google Sheet
+                </button>
+                <button class="export-btn secondary" onclick="reloadFromSheet('merge')">
+                    🔀 Fusionner avec le Google Sheet
+                </button>
+                <div class="config-status" id="reload-status"></div>
+            </div>
+
+            <div class="export-card">
+                <h3>Importer un fichier</h3>
                 <button class="export-btn primary" onclick="document.getElementById('import-file').click()">
-                    📥 Importer un fichier JSON (depuis le Sheet)
+                    📥 Importer un fichier JSON
                 </button>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
                 <div class="config-status" id="import-status"></div>
@@ -1489,6 +1500,7 @@
         let currentDate = new Date();
         let entries = {};
         let pendingSync = []; // Entrées en attente de sync
+        let pendingDeletes = []; // Suppressions en attente de sync
         let selectedDuration = null;
         let scriptUrl = 'https://script.google.com/macros/s/AKfycbx30tg4uV69eQgjVMMeVLXVDE7piAaJ1z5mzs7ADLKysSuUz3AK-gIQ5PT6Fin46yMa/exec';
         
@@ -1556,14 +1568,18 @@
         function loadData() {
             const saved = localStorage.getItem('sandro-temps');
             if (saved) entries = JSON.parse(saved);
-            
+
             const pending = localStorage.getItem('sandro-temps-pending');
             if (pending) pendingSync = JSON.parse(pending);
+
+            const pendingDel = localStorage.getItem('sandro-temps-pending-deletes');
+            if (pendingDel) pendingDeletes = JSON.parse(pendingDel);
         }
-        
+
         function saveData() {
             localStorage.setItem('sandro-temps', JSON.stringify(entries));
             localStorage.setItem('sandro-temps-pending', JSON.stringify(pendingSync));
+            localStorage.setItem('sandro-temps-pending-deletes', JSON.stringify(pendingDeletes));
         }
         
         function loadConfig() {
@@ -1587,7 +1603,7 @@
             const statusEls = document.querySelectorAll('.sync-status');
             const isOnline = navigator.onLine;
             const hasUrl = !!scriptUrl;
-            const hasPending = pendingSync.length > 0;
+            const hasPending = pendingSync.length > 0 || pendingDeletes.length > 0;
             
             let status, text;
             
@@ -1599,7 +1615,7 @@
                 text = 'Hors ligne';
             } else if (hasPending) {
                 status = 'syncing';
-                text = `${pendingSync.length} en attente`;
+                text = `${pendingSync.length + pendingDeletes.length} en attente`;
             } else {
                 status = 'synced';
                 text = 'Synchronisé';
@@ -1655,6 +1671,7 @@
             try {
                 const affaire = AFFAIRES.find(a => a.code === entry.affaire);
                 const payload = {
+                    action: 'upsert',
                     entryId: getStableEntryId(entry),
                     date: entry.date,
                     affaireCode: entry.affaire,
@@ -1699,15 +1716,23 @@
         }
         
         async function syncPending() {
-            if (!scriptUrl || !navigator.onLine || pendingSync.length === 0) return;
-            
+            if (!scriptUrl || !navigator.onLine) return;
+            if (pendingSync.length === 0 && pendingDeletes.length === 0) return;
+
             const toSync = [...pendingSync];
             pendingSync = [];
-            
+
             for (const entry of toSync) {
                 await syncToSheet(entry);
             }
-            
+
+            const toDelete = [...pendingDeletes];
+            pendingDeletes = [];
+
+            for (const entryId of toDelete) {
+                await syncDeleteToSheet(entryId);
+            }
+
             saveData();
             updateSyncStatus();
         }
@@ -2198,14 +2223,51 @@
         
         function deleteEntry(index) {
             if (!confirm('Supprimer cette entrée ?')) return;
-            
+
             const key = getDateKey(currentDate);
+            const entry = entries[key][index];
+            const entryId = getStableEntryId(entry);
+
             entries[key].splice(index, 1);
             if (entries[key].length === 0) delete entries[key];
-            
+
             saveData();
             updateUI();
+
+            syncDeleteToSheet(entryId);
             showToast('Entrée supprimée');
+        }
+
+        async function syncDeleteToSheet(entryId) {
+            if (!scriptUrl || !navigator.onLine) {
+                if (!pendingDeletes.includes(entryId)) {
+                    pendingDeletes.push(entryId);
+                    saveData();
+                }
+                updateSyncStatus();
+                return;
+            }
+
+            try {
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete', entryId })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
+                if (result?.success === false) throw new Error(result?.message || 'Erreur suppression');
+
+                updateSyncStatus();
+            } catch (error) {
+                console.error('Delete sync error:', error);
+                if (!pendingDeletes.includes(entryId)) {
+                    pendingDeletes.push(entryId);
+                    saveData();
+                }
+                updateSyncStatus();
+            }
         }
         
         // ==========================================
@@ -2554,6 +2616,71 @@
             }
         }
         
+        async function reloadFromSheet(mode) {
+            if (!scriptUrl) {
+                showToast('Configurez l\'URL du script d\'abord', 'error');
+                return;
+            }
+            if (!navigator.onLine) {
+                showToast('Pas de connexion internet', 'error');
+                return;
+            }
+
+            const label = mode === 'replace' ? 'Remplacer toutes les données locales' : 'Fusionner avec les données locales';
+            if (!confirm(label + ' par celles du Google Sheet ?')) return;
+
+            const statusEl = document.getElementById('reload-status');
+            statusEl.textContent = '⏳ Chargement depuis le Sheet...';
+            statusEl.className = 'config-status';
+
+            try {
+                const response = await fetch(scriptUrl + '?action=export', { redirect: 'follow' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                if (!data.success || !data.entries) {
+                    throw new Error(data.message || 'Réponse invalide du script');
+                }
+
+                if (mode === 'replace') {
+                    entries = data.entries;
+                    pendingSync = [];
+                    pendingDeletes = [];
+                } else {
+                    // Merge: add entries from Sheet that don't exist locally
+                    let addedCount = 0;
+                    for (const [dateKey, dayEntries] of Object.entries(data.entries)) {
+                        if (!entries[dateKey]) entries[dateKey] = [];
+                        const existingIds = new Set(entries[dateKey].map(e => getStableEntryId(e)));
+                        for (const entry of dayEntries) {
+                            if (!existingIds.has(getStableEntryId(entry))) {
+                                entries[dateKey].push(entry);
+                                addedCount++;
+                            }
+                        }
+                    }
+                    statusEl.textContent = `✅ ${addedCount} entrées ajoutées par fusion`;
+                }
+
+                saveData();
+                updateUI();
+                updateSyncStatus();
+
+                if (mode === 'replace') {
+                    const dayCount = Object.keys(entries).length;
+                    statusEl.textContent = `✅ ${dayCount} jours rechargés depuis le Sheet`;
+                }
+                statusEl.className = 'config-status success';
+                showToast('Données rechargées', 'success');
+
+            } catch (error) {
+                console.error('Reload error:', error);
+                statusEl.textContent = '❌ Erreur: ' + error.message;
+                statusEl.className = 'config-status error';
+                showToast('Erreur de rechargement', 'error');
+            }
+        }
+
         function importJSON(event) {
             const file = event.target.files[0];
             if (!file) return;

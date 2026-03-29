@@ -42,6 +42,7 @@ function createOrUpdateSandroDashboard() {
   }
 
   const tz = ss.getSpreadsheetTimeZone() || Session.getScriptTimeZone() || 'Europe/Paris';
+  const statutCol = headers.indexOf('Statut');
   const dailyTotals = new Map();
   const dailyByAffair = new Map();
   const monthlyTotals = new Map();
@@ -49,6 +50,13 @@ function createOrUpdateSandroDashboard() {
 
   for (let i = 1; i < sourceValues.length; i++) {
     const row = sourceValues[i];
+
+    // Ignorer les lignes supprimées (soft delete)
+    if (statutCol !== -1) {
+      const statut = String(row[statutCol] || '').trim().toLowerCase();
+      if (statut === 'supprimé' || statut === 'supprime') continue;
+    }
+
     const dateKey = toDateKey_(row[dateCol], tz, row[timestampCol]);
     const duration = toNumber_(row[durationCol]);
     if (!dateKey || !Number.isFinite(duration) || duration <= 0) continue;
