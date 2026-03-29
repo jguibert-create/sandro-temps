@@ -1328,7 +1328,7 @@
             <div class="month-export">
                 <h3>Export relevé mensuel</h3>
                 <button class="export-btn primary" onclick="exportMonthlyCSV()">
-                    📄 Télécharger le relevé du mois (CSV)
+                    📄 Export contrat du mois (CSV)
                 </button>
                 <button class="export-btn secondary" onclick="shareMonthlyRecap()">
                     📤 Partager le récap du mois
@@ -2446,54 +2446,37 @@
         function exportMonthlyCSV() {
             const year = selectedMonth.getFullYear();
             const month = selectedMonth.getMonth();
-            const { workingDays, dayDetails } = getWorkingDaysInMonth(year, month);
-            const contractualHours = workingDays * DAILY_TARGET_HOURS;
-            const monthLabel = new Date(year, month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            const { dayDetails } = getWorkingDaysInMonth(year, month);
 
             const rows = [];
-            // Header section
-            rows.push(['Relevé mensuel - Sandro', '', '', '', '']);
-            rows.push(['Mois', monthLabel, '', '', '']);
-            rows.push(['Jours ouvrés', workingDays, '', '', '']);
-            rows.push(['Heures contractuelles', contractualHours, '', '', '']);
-            rows.push(['', '', '', '', '']);
-            rows.push(['Date', 'Jour', 'Code Affaire', 'Affaire', 'Durée (h)', 'Description']);
+            rows.push(['Date', 'Code Affaire', 'Affaire', 'Durée (h)']);
 
             let totalHours = 0;
             const affaireTotals = {};
 
-            dayDetails.forEach(({ key, date, isWeekend, isHoliday, isWorkday }) => {
+            dayDetails.forEach(({ key }) => {
                 const dayEntries = entries[key] || [];
-                const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long' });
-
-                if (dayEntries.length === 0 && isWorkday) {
-                    rows.push([key, dayName, '', '', 0, isHoliday ? 'Jour férié' : '']);
-                } else {
-                    dayEntries.forEach(entry => {
-                        const affaire = AFFAIRES.find(a => a.code === entry.affaire);
-                        rows.push([
-                            key,
-                            dayName,
-                            entry.affaire,
-                            affaire?.label || '',
-                            entry.duration,
-                            entry.description || ''
-                        ]);
-                        totalHours += Number(entry.duration) || 0;
-                        affaireTotals[entry.affaire] = roundHours((affaireTotals[entry.affaire] || 0) + (Number(entry.duration) || 0));
-                    });
-                }
+                dayEntries.forEach(entry => {
+                    const affaire = AFFAIRES.find(a => a.code === entry.affaire);
+                    rows.push([
+                        key,
+                        entry.affaire,
+                        affaire?.label || '',
+                        entry.duration
+                    ]);
+                    totalHours += Number(entry.duration) || 0;
+                    affaireTotals[entry.affaire] = roundHours((affaireTotals[entry.affaire] || 0) + (Number(entry.duration) || 0));
+                });
             });
 
-            // Summary footer
-            rows.push(['', '', '', '', '', '']);
-            rows.push(['TOTAL', '', '', '', roundHours(totalHours), '']);
-            rows.push(['Taux occupation', '', '', '', roundHours((totalHours / contractualHours) * 100) + '%', '']);
-            rows.push(['', '', '', '', '', '']);
-            rows.push(['Récap par affaire', '', '', '', '', '']);
+            // Pied : total + récap par affaire
+            rows.push(['', '', '', '']);
+            rows.push(['TOTAL', '', '', roundHours(totalHours)]);
+            rows.push(['', '', '', '']);
+            rows.push(['Récap par affaire', '', '', '']);
             AFFAIRES.forEach(a => {
                 const h = affaireTotals[a.code] || 0;
-                if (h > 0) rows.push(['', '', a.code, a.label, h, '']);
+                if (h > 0) rows.push(['', a.code, a.label, h]);
             });
 
             const csv = rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
@@ -2502,7 +2485,7 @@
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             const monthNum = String(month + 1).padStart(2, '0');
-            a.download = `releve_sandro_${year}-${monthNum}.csv`;
+            a.download = `contrat_sandro_${year}-${monthNum}.csv`;
             a.click();
 
             showToast('Relevé mensuel téléchargé', 'success');
