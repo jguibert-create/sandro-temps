@@ -1682,9 +1682,6 @@
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify(payload)
                 });
 
@@ -1692,13 +1689,8 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
 
-                const responseType = response.headers.get('content-type') || '';
-                if (!responseType.includes('application/json')) {
-                    throw new Error('Réponse non JSON du script');
-                }
-
                 const result = await response.json();
-                if (result?.success === false) {
+                if (result?.success !== true) {
                     throw new Error(result?.message || 'Le script a refusé la synchronisation');
                 }
                 
@@ -2251,13 +2243,12 @@
             try {
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'delete', entryId })
                 });
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const result = await response.json();
-                if (result?.success === false) throw new Error(result?.message || 'Erreur suppression');
+                if (result?.success !== true) throw new Error(result?.message || 'Erreur suppression');
 
                 updateSyncStatus();
             } catch (error) {
